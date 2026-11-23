@@ -1,0 +1,673 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Lumen Atelier — design tokens (DESIGN.md §2)
+   ------------------------------------------------------------------ */
+
+@theme {
+  --color-*: initial;
+  --color-bone: #f3eee6;
+  --color-linen: #e7dfd2;
+  --color-ink: #1c1a18;
+  --color-char: #2a2724;
+  --color-graphite: #5c564e;
+  --color-stone: #a39a8e;
+  --color-terra: #b4532f;
+  --color-terra-ink: #9a4426;
+  --color-clay: #d9a07f;
+
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 75rem;
+  --breakpoint-xl: 105rem;
+
+  --text-hero: clamp(3.25rem, 0.557rem + 11.05vw, 10.5rem);
+  --text-hero--line-height: 0.92;
+  --text-hero--letter-spacing: -0.035em;
+  --text-statement: clamp(2.125rem, 0.686rem + 5.905vw, 6rem);
+  --text-statement--line-height: 1.02;
+  --text-statement--letter-spacing: -0.025em;
+  --text-h2: clamp(2rem, 1.071rem + 3.81vw, 4.5rem);
+  --text-h2--line-height: 1;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h3: clamp(1.5rem, 1.129rem + 1.524vw, 2.5rem);
+  --text-h3--line-height: 1.1;
+  --text-h3--letter-spacing: -0.01em;
+  --text-numeral: clamp(4rem, 1.771rem + 9.143vw, 10rem);
+  --text-numeral--line-height: 0.9;
+  --text-numeral--letter-spacing: -0.04em;
+  --text-lead: clamp(1.125rem, 0.986rem + 0.571vw, 1.5rem);
+  --text-lead--line-height: 1.45;
+  --text-lead--letter-spacing: -0.005em;
+  --text-body: clamp(1rem, 0.954rem + 0.19vw, 1.125rem);
+  --text-body--line-height: 1.6;
+  --text-small: clamp(0.8125rem, 0.789rem + 0.095vw, 0.875rem);
+  --text-small--line-height: 1.5;
+  --text-small--letter-spacing: 0.005em;
+  --text-label: clamp(0.6875rem, 0.664rem + 0.095vw, 0.75rem);
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.14em;
+  /* Spec: 15.6vw; measured Instrument Serif needs ~0.24 × content width to span it edge to edge */
+  --text-wordmark: calc(var(--content-w) * 0.238);
+  --text-wordmark--line-height: 0.8;
+  --text-wordmark--letter-spacing: -0.045em;
+
+  --radius-none: 0;
+  --radius-arch: 999px 999px 0 0;
+  --radius-pill: 999px;
+  --radius-sm: 2px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+@theme inline {
+  --font-serif: var(--font-instrument), "Times New Roman", serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  /* spacing (8pt base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --space-11: 160px;
+  --space-12: 224px;
+  --section-y: clamp(6rem, 3.214rem + 11.43vw, 14rem);
+
+  /* durations */
+  --dur-instant: 120ms;
+  --dur-fast: 240ms;
+  --dur-base: 480ms;
+  --dur-slow: 900ms;
+  --dur-slower: 1200ms;
+  --dur-cinematic: 1600ms;
+
+  /* rules */
+  --rule-light: color-mix(in oklab, var(--color-ink) 14%, transparent);
+  --rule-dark: color-mix(in oklab, var(--color-bone) 16%, transparent);
+
+  /* grid */
+  --cols: 4;
+  --margin: 20px;
+  --gutter: 16px;
+  --content-max: 1584px;
+  /* effective outer margin (centres content at xl) */
+  --margin-eff: max(var(--margin), calc((100vw - var(--content-max)) / 2));
+  --content-w: calc(100vw - 2 * var(--margin-eff));
+  --col: calc((var(--content-w) - (var(--cols) - 1) * var(--gutter)) / var(--cols));
+
+  --header-h: 64px;
+
+  /* page theme (ANIM tweens these on <body>) */
+  --page-bg: var(--color-bone);
+  --page-fg: var(--color-ink);
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --cols: 8;
+    --margin: 32px;
+    --gutter: 20px;
+  }
+}
+
+@media (min-width: 75rem) {
+  :root {
+    --cols: 12;
+    --margin: 48px;
+    --gutter: 24px;
+    --header-h: 88px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--page-bg);
+    color: var(--page-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  /* Global grain (§4.0) */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  ::selection {
+    background: var(--color-terra);
+    color: var(--color-bone);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  /* Headline italic accent: exactly one em per headline */
+  :is(h1, h2, h3, .heading) em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--accent-em);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus, var(--color-terra-ink));
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+
+  [id] {
+    scroll-margin-top: 0;
+  }
+}
+
+/* Section themes (§3, §5.0). With .js-theme on <html> ANIM makes them transparent. */
+[data-theme] {
+  --accent-em: var(--color-terra);
+  --accent-link: var(--color-terra-ink);
+  --fg-muted: var(--color-graphite);
+  --rule: var(--rule-light);
+  --focus: var(--color-terra-ink);
+}
+[data-theme="light"] {
+  background-color: var(--color-bone);
+  color: var(--color-ink);
+}
+[data-theme="linen"] {
+  background-color: var(--color-linen);
+  color: var(--color-ink);
+}
+[data-theme="dark"] {
+  background-color: var(--color-ink);
+  color: var(--color-bone);
+  --accent-em: var(--color-clay);
+  --accent-link: var(--color-clay);
+  --fg-muted: var(--color-stone);
+  --rule: var(--rule-dark);
+  --focus: var(--color-clay);
+}
+.js-theme main [data-theme],
+.js-theme footer[data-theme] {
+  background-color: transparent;
+}
+
+/* ------------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------------ */
+
+@utility grid-site {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gutter);
+  padding-inline: var(--margin);
+  max-width: calc(var(--content-max) + 2 * var(--margin));
+  margin-inline: auto;
+  width: 100%;
+}
+
+@utility t-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-label);
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@utility t-lead {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-lead);
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  max-width: 34ch;
+}
+
+@utility measure {
+  max-width: 62ch;
+}
+
+@utility text-muted {
+  color: var(--fg-muted);
+}
+
+@utility rule-t {
+  border-top: 1px solid var(--rule);
+}
+
+@utility rule-b {
+  border-bottom: 1px solid var(--rule);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------
+   Components (static styles + CSS-only hovers)
+   ------------------------------------------------------------------ */
+
+@layer components {
+  /* Underline link (nav, TextLink) — §3.0 */
+  .u-link {
+    position: relative;
+    display: inline-block;
+  }
+  .u-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform var(--dur-fast) var(--ease-out-soft);
+  }
+  .u-link:hover::after,
+  .u-link:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+  /* TextLink: underline visible at rest, re-draws on hover */
+  .u-link--rest::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+  .u-link--rest:hover::after {
+    animation: u-redraw calc(var(--dur-fast) * 2) var(--ease-out-soft);
+  }
+  @keyframes u-redraw {
+    0% {
+      transform: scaleX(1);
+      transform-origin: right center;
+    }
+    50% {
+      transform: scaleX(0);
+      transform-origin: right center;
+    }
+    50.01% {
+      transform: scaleX(0);
+      transform-origin: left center;
+    }
+    100% {
+      transform: scaleX(1);
+      transform-origin: left center;
+    }
+  }
+
+  /* Pill button — §5.8 (CSS version; ANIM may refine) */
+  .btn {
+    --btn-bg: var(--color-ink);
+    --btn-fg: var(--color-bone);
+    --btn-fill: var(--color-terra-ink);
+    --btn-fg-hover: var(--color-bone);
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    overflow: hidden;
+    transition: color var(--dur-fast) var(--ease-out-soft) calc(var(--dur-base) * 0.25);
+  }
+  .btn:focus-visible {
+    outline-offset: 4px;
+    border-radius: var(--radius-pill);
+  }
+  .btn--bone {
+    --btn-bg: var(--color-bone);
+    --btn-fg: var(--color-ink);
+    --btn-fill: var(--color-clay);
+    --btn-fg-hover: var(--color-ink);
+  }
+  .btn--outline {
+    --btn-bg: transparent;
+    --btn-fg: currentColor;
+    --btn-fill: var(--color-ink);
+    --btn-fg-hover: var(--color-bone);
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  .btn-fill {
+    position: absolute;
+    left: var(--x, 50%);
+    top: var(--y, 50%);
+    width: 260%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--btn-fill);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform var(--dur-base) var(--ease-out);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .btn:hover {
+    color: var(--btn-fg-hover);
+  }
+  .btn:hover .btn-fill {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .btn-icon {
+    position: relative;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+  }
+  .btn-icon > svg {
+    position: absolute;
+    inset: 0;
+    transition: transform var(--dur-base) var(--ease-out-soft);
+  }
+  .btn-icon > svg + svg {
+    transform: translateX(-16px);
+  }
+  .btn:hover .btn-icon > svg:first-child {
+    transform: translateX(16px);
+  }
+  .btn:hover .btn-icon > svg + svg {
+    transform: translateX(0);
+  }
+
+  /* Media frame (§4) */
+  .frame {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .frame--arch {
+    border-radius: var(--radius-arch);
+  }
+  .frame-inner {
+    position: absolute;
+    inset: -8%;
+  }
+  .frame-inner > svg,
+  .frame-inner > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Native horizontal gallery (pre-ANIM / reduced motion) */
+  .gallery-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-stone) transparent;
+  }
+
+  /* Recognition row hover — §5.6 */
+  /* `translate` (not transform) so the hover composes with GSAP's reveal transform */
+  .award-row .award-text {
+    transition: translate var(--dur-fast) var(--ease-out-soft);
+  }
+  .award-row .award-year {
+    transition: color var(--dur-fast) var(--ease-out-soft);
+  }
+  .award-row:hover .award-text {
+    translate: 8px 0;
+  }
+  .award-row:hover .award-year {
+    color: var(--color-terra-ink);
+  }
+
+  /* Email link underline — §5.7 */
+  .email-link {
+    position: relative;
+    display: inline;
+    background-image: linear-gradient(var(--color-clay), var(--color-clay));
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    transition: background-size var(--dur-fast) var(--ease-out-soft);
+  }
+  .email-link:hover {
+    animation: email-redraw calc(var(--dur-fast) * 2) var(--ease-out-soft);
+  }
+  @keyframes email-redraw {
+    0% {
+      background-size: 100% 1px;
+      background-position: 100% 100%;
+    }
+    50% {
+      background-size: 0% 1px;
+      background-position: 100% 100%;
+    }
+    50.01% {
+      background-size: 0% 1px;
+      background-position: 0 100%;
+    }
+    100% {
+      background-size: 100% 1px;
+      background-position: 0 100%;
+    }
+  }
+
+  /* Header colour (ANIM toggles data-header-theme) */
+  .site-header {
+    color: var(--color-ink);
+    transition: color var(--dur-fast) var(--ease-out-soft);
+  }
+  .site-header[data-header-theme="dark"],
+  .site-header[data-menu-open="true"] {
+    color: var(--color-bone);
+    --focus: var(--color-clay);
+  }
+
+  /* Custom cursor — hidden until ANIM adds .has-cursor */
+  .cursor {
+    display: none;
+  }
+  .has-cursor .cursor {
+    display: block;
+  }
+  .has-cursor,
+  .has-cursor a,
+  .has-cursor button {
+    cursor: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Reduced motion (§7)
+   ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *:not(:focus-visible),
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Project card sizing (§3.3) — height adapts to viewport so the pinned view fits */
+.project-frame {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+}
+@media (min-width: 48rem) {
+  .project-card {
+    --card-h: clamp(300px, calc(100svh - 580px), 492px);
+    --card-w: calc(var(--card-h) * 13 / 16);
+  }
+  .project-frame {
+    aspect-ratio: auto;
+    width: var(--card-w);
+    height: var(--card-h);
+  }
+}
+@media (min-width: 75rem) {
+  .project-card {
+    --card-h: clamp(320px, calc(100svh - 580px), 640px);
+  }
+}
+.project-card .frame-inner > svg {
+  transition: transform 900ms var(--ease-out-soft);
+}
+@media (hover: hover) {
+  .project-card a:hover .frame-inner > svg {
+    transform: scale(1.04);
+  }
+}
+
+/* Hero headline: also bounded by viewport height at desktop so all three lines fit in 1440×900 */
+@media (min-width: 75rem) {
+  .hero-title {
+    font-size: min(var(--text-hero), calc((100svh - 470px) / 2.76));
+  }
+}
+
+/* Process visual is not a parallax target: no bleed, so the swatch labels stay visible */
+.frame-inner--flush {
+  inset: 0;
+}
+
+/* Header over dark sections (ANIM sets data-header-theme="dark") */
+.site-header[data-header-theme="dark"] .btn {
+  --btn-bg: var(--color-bone);
+  --btn-fg: var(--color-ink);
+  --btn-fill: var(--color-clay);
+  --btn-fg-hover: var(--color-ink);
+}
+
+/* ------------------------------------------------------------------
+   Animation layer (animation agent). Initial states are gated on classes the inline
+   boot script adds only when JS runs (and removes again if the bundle never boots).
+   ------------------------------------------------------------------ */
+html.js-preload [data-preloader][hidden] {
+  display: block;
+}
+html.js-intro [data-hero] h1,
+html.js-intro [data-hero-fade],
+html.js-intro [data-hero-media] .frame,
+html.js-intro [data-hero-media] figcaption {
+  visibility: hidden;
+}
+
+/* SplitText wrappers. Line masks get room for descenders (line-heights go down to 0.92). */
+.split-line-mask {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+/* Keep the last mask's negative margin inside the split element so its height is the same
+   split and unsplit (otherwise every reveal's revert forced a ScrollTrigger.refresh). */
+:where(:has(> .split-line-mask)) {
+  display: flow-root;
+}
+.split-line {
+  will-change: transform;
+}
+.split-char,
+.split-word {
+  will-change: transform, opacity;
+}
+
+/* Pill press (§5.8): `scale` composes with the magnetic transform. */
+.btn {
+  transition:
+    color var(--dur-fast) var(--ease-out-soft) calc(var(--dur-base) * 0.25),
+    scale var(--dur-instant) var(--ease-out-soft);
+}
+.btn:active {
+  scale: 0.97;
+}
+
+/* Custom cursor states: GSAP drives position + scale, colours transition here. */
+.cursor-disc {
+  background-color: var(--page-fg);
+  border: 0 solid var(--page-fg);
+  transition:
+    background-color var(--dur-base) var(--ease-out-soft),
+    border-width var(--dur-base) var(--ease-out-soft);
+}
+.cursor[data-state="link"] .cursor-disc {
+  background-color: transparent;
+  /* 1px on screen at scale 0.423 */
+  border-width: 2.4px;
+}
+.cursor[data-state="view"] .cursor-disc {
+  background-color: var(--color-terra);
+}
+.has-cursor input,
+.has-cursor textarea {
+  cursor: auto;
+}
+/* Header CTA flips colours with data-header-theme: no hover delay there, or the label blinks ink-on-ink. */
+.site-header .btn {
+  transition-delay: 0s;
+}
+
+/* QA: the header is transparent over the hero, but once content scrolls beneath it (or when
+   it slides back in on scroll up) it gets the surface of the section under it, so nav and
+   copy never overlap. Without the motion layer (no JS / reduced motion) it is always solid. */
+.site-header {
+  transition:
+    color var(--dur-fast) var(--ease-out-soft),
+    background-color var(--dur-fast) var(--ease-out-soft);
+}
+.site-header[data-scrolled="true"],
+html:not(.js) .site-header {
+  background-color: var(--color-bone);
+}
+.site-header[data-scrolled="true"][data-header-surface="linen"],
+html:not(.js) .site-header[data-header-surface="linen"] {
+  background-color: var(--color-linen);
+}
+.site-header[data-scrolled="true"][data-header-theme="dark"],
+html:not(.js) .site-header[data-header-theme="dark"] {
+  background-color: var(--color-ink);
+}
+.site-header[data-menu-open="true"] {
+  background-color: transparent;
+}
