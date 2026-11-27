@@ -793,3 +793,12 @@ Fixes made after QA (prod build, Playwright at 1440×900, 1024×768 and 390×844
 - **Focus kept across `ScrollTrigger.refresh()`:** the pin revert moved focus to `<body>` while tabbing through the gallery, which skipped cards 4–5 and the footer.
 - **Tab order:** fade-ups that contain links (footer group, gallery end card, generic `fadeUp`) now tween `opacity` rather than `autoAlpha`, so `visibility: hidden` no longer drops those links from the tab order before they have been revealed.
 - **Reduced motion:** the mobile "Close" label kept its server-rendered `y: 100%` offset. The reduced variant now sets `y: 0`.
+
+### Mobile performance pass
+Measured with Playwright (Pixel 7 / iPhone 13, CPU ×4, real CDP touch events):
+- **Lenis is skipped on touch devices** (`(hover: none) and (pointer: coarse)`). With `syncTouch: false` it never smoothed touch anyway. It did add non-passive window touch listeners and rewrote the `<html>` class at each scroll start and stop. Anchor clicks still get an eased scroll there (native smooth), and `lockScroll` falls back to `html.scroll-locked` (overflow hidden).
+- **Theme tween** now tweens body `background-color` only. Tweening the inherited `--page-bg/--page-fg` restyled all ~900 elements on every frame, which caused every long task while scrolling. Body `color` switches once per section, since each section sets its own text colour. The cursor gets `--page-fg` on its own subtree.
+- **No permanent `will-change` on `.split-word`.** That was 44 compositor layers re-layerized on every scrub frame.
+- **The grain overlay has no `mix-blend-mode` on touch devices**, so the full screen is not blended on each frame. Its opacity is 0.035.
+- **Philosophy mobile scrub range** is now `top 88%` → `bottom 30%`, about 700px (was about 490px). Words light up while the statement is on screen instead of finishing in one flick.
+- **`PageReady`** (rendered last in `page.tsx`) gates `PageMotion`. GSAP must never split DOM that the page segment has not hydrated yet: that causes React #418, and React then throws the split DOM away.

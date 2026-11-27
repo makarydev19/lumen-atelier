@@ -608,9 +608,25 @@ html.js-intro [data-hero-media] figcaption {
 .split-line {
   will-change: transform;
 }
-.split-char,
-.split-word {
+.split-char {
   will-change: transform, opacity;
+}
+/* Perf: the Philosophy words (44+ spans, split for the whole page life) only scrub opacity.
+   A permanent will-change gave each its own compositor layer, and every scrub frame paid to
+   re-layerize them all (the biggest main-thread cost on phones). No will-change here. */
+
+/* Native-scroll lock (touch devices / reduced motion, where Lenis is not running). */
+html.scroll-locked {
+  overflow: hidden;
+}
+
+/* Perf on touch devices: a full-viewport fixed layer with mix-blend-mode forces the compositor
+   to blend the whole screen on every scroll frame. Plain alpha keeps the grain texture. */
+@media (hover: none) and (pointer: coarse) {
+  body::after {
+    mix-blend-mode: normal;
+    opacity: 0.035;
+  }
 }
 
 /* Pill press (§5.8): `scale` composes with the magnetic transform. */

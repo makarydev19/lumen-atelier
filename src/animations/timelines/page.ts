@@ -11,12 +11,20 @@ const THEMES: Record<string, { bg: string; fg: string }> = {
 const themedSections = () => $$("main section[data-theme], footer[data-theme]");
 
 /**
- * §5.0 Theme background tween: sections go transparent (`.js-theme`) and <body>'s
- * --page-bg / --page-fg follow the section crossing 55% of the viewport.
+ * §5.0 Theme background tween: sections go transparent (`.js-theme`) and <body>'s background
+ * follows the section crossing 55% of the viewport.
+ *
+ * Perf: this used to tween the custom properties --page-bg / --page-fg on <body>. Custom
+ * properties (and `color`) inherit, so every frame of the 0.8s tween restyled the whole document
+ * (~900 elements): the longest main-thread tasks while scrolling on phones. Now only body's own
+ * (non-inherited) background-color tweens. Its text colour, which no themed section inherits
+ * (each sets its own), switches once per section, and the custom cursor, the one consumer of
+ * --page-fg, gets the tween on its own small subtree.
  */
 export function themeTween() {
   const root = document.documentElement;
   const body = document.body;
+  const cursor = $(".cursor");
   root.classList.add("js-theme");
   themedSections().forEach((section) => {
     const theme = THEMES[section.dataset.theme ?? "light"] ?? THEMES.light;
@@ -26,15 +34,19 @@ export function themeTween() {
       end: "bottom 55%",
       onToggle: (self) => {
         if (!self.isActive) return;
-        gsap.to(body, { "--page-bg": theme.bg, "--page-fg": theme.fg, duration: 0.8, ease: "power2.inOut", overwrite: true });
+        gsap.set(body, { color: theme.fg });
+        gsap.to(body, { backgroundColor: theme.bg, duration: 0.8, ease: "power2.inOut", overwrite: "auto" });
+        if (cursor) gsap.to(cursor, { "--page-fg": theme.fg, duration: 0.8, ease: "power2.inOut", overwrite: true });
       },
     });
   });
   // First section is active before anything crosses 55%.
-  gsap.set(body, { "--page-bg": THEMES.light.bg, "--page-fg": THEMES.light.fg });
+  gsap.set(body, { backgroundColor: THEMES.light.bg, color: THEMES.light.fg });
+  if (cursor) gsap.set(cursor, { "--page-fg": THEMES.light.fg });
   return () => {
     root.classList.remove("js-theme");
-    gsap.set(body, { clearProps: "--page-bg,--page-fg" });
+    gsap.set(body, { clearProps: "backgroundColor,color" });
+    if (cursor) gsap.set(cursor, { clearProps: "--page-fg" });
   };
 }
 

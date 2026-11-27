@@ -13,6 +13,15 @@ const locks = new Set<string>();
 
 export const getLenis = () => lenisInstance;
 
+/**
+ * Touch-first devices (phones, tablets) scroll natively. Lenis never smooths touch here
+ * (`syncTouch: false`), so on those devices it only added cost: non-passive window
+ * touchstart/touchmove listeners (every touch scroll waited on the main thread) and a class
+ * rewrite on <html> at each scroll start/stop (a full-document style recalc).
+ */
+const TOUCH_MQ = "(hover: none) and (pointer: coarse)";
+const isTouchDevice = () => typeof window !== "undefined" && window.matchMedia(TOUCH_MQ).matches;
+
 /** expo.out — the anchor easing from §5.0. */
 export const anchorEase = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 /** expo.inOut — Back to top (§5.7). */
@@ -26,7 +35,11 @@ export const expoInOut = (t: number) =>
         : (2 - Math.pow(2, -20 * t + 10)) / 2;
 
 function applyLocks() {
-  if (!lenisInstance) return;
+  if (!lenisInstance) {
+    // Native scroll (touch devices, reduced motion): lock with overflow instead.
+    if (typeof document !== "undefined") document.documentElement.classList.toggle("scroll-locked", locks.size > 0);
+    return;
+  }
   if (locks.size > 0) lenisInstance.stop();
   else lenisInstance.start();
 }
@@ -67,8 +80,11 @@ export function scrollToTarget(
     });
   } else {
     const y = typeof target === "number" ? target : target.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: y, behavior: "auto" });
-    done();
+    // Touch devices without Lenis still get an eased jump; reduced motion jumps instantly.
+    const smooth = !prefersReducedMotion() && Math.abs(window.scrollY - y) > 1;
+    window.scrollTo({ top: y, behavior: smooth ? "smooth" : "auto" });
+    if (smooth && "onscrollend" in window) window.addEventListener("scrollend", done, { once: true });
+    else done();
   }
 }
 
@@ -76,34 +92,16 @@ const LenisContext = createContext<Lenis | null>(null);
 export const useLenis = () => useContext(LenisContext);
 
 /**
- * §5.0 Lenis provider. Created once on mount (not for reduced motion), bridged to the GSAP ticker
+ * §5.0 Lenis provider. Created once on mount (not for reduced motion or touch devices), bridged to the GSAP ticker
  * and ScrollTrigger. Handles in-page anchor clicks with an eased scroll + focus move.
  */
 export function SmoothScroll({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion() || lenisInstance) return;
+    if (prefersReducedMotion()) return;
 
-    const instance = new Lenis({
-      lerp: 0.085,
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 1,
-      syncTouch: false,
-      anchors: false,
-      autoRaf: false,
-    });
-    lenisInstance = instance;
-    applyLocks();
-
-    instance.on("scroll", ScrollTrigger.update);
-    const raf = (time: number) => instance.raf(time * 1000);
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- expose the instance created in this effect
-    setLenis(instance);
-
+    // Anchor clicks get an eased scroll + focus move on every device (Lenis or native smooth).
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
@@ -118,6 +116,30 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     };
     document.addEventListener("click", onClick);
 
+    if (isTouchDevice() || lenisInstance) {
+      return () => document.removeEventListener("click", onClick);
+    }
+
+    const instance = new Lenis({
+      lerp: 0.085,
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1,
+      syncTouch: false,
+      anchors: false,
+      autoRaf: false,
+    });
+    lenisInstance = instance;
+    document.documentElement.classList.remove("scroll-locked");
+    applyLocks();
+
+    instance.on("scroll", ScrollTrigger.update);
+    const raf = (time: number) => instance.raf(time * 1000);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- expose the instance created in this effect
+    setLenis(instance);
+
     // Reduced-motion preference flipped at runtime → drop smooth scroll.
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onMq = () => {
@@ -126,6 +148,7 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
         gsap.ticker.remove(raf);
         if (lenisInstance === instance) lenisInstance = null;
         setLenis(null);
+        applyLocks();
       }
     };
     mq.addEventListener("change", onMq);

@@ -12,6 +12,7 @@ import { footerTimeline } from "./timelines/footer";
 import { headerTimeline, themeTween } from "./timelines/page";
 import { parallaxSpeeds } from "./timelines/parallax";
 import { setupCursor } from "./cursor";
+import { whenPageReady } from "./PageReady";
 
 /**
  * Orchestrates every GSAP animation on the page (DESIGN.md §5). Renders nothing.
@@ -27,7 +28,9 @@ export function PageMotion() {
     const root = document.documentElement;
     root.classList.add("anim-ready");
     let alive = true;
-    fontsReady().then(() => alive && setFontsLoaded(true));
+    // Fonts (SplitText measures real glyphs) and a hydrated page (GSAP must not touch DOM React
+    // has not hydrated yet: on phones the page segment can hydrate after this component mounts).
+    Promise.all([fontsReady(), whenPageReady()]).then(() => alive && setFontsLoaded(true));
     // Last-resort: never leave the hero hidden if something below throws.
     const safety = window.setTimeout(() => root.classList.remove("js-intro"), 8000);
     return () => {

@@ -6,6 +6,7 @@ import { ProjectsGallery } from "@/components/sections/projects/ProjectsGallery"
 import { ProcessSection } from "@/components/sections/process/ProcessSection";
 import { StatsSection } from "@/components/sections/stats/StatsSection";
 import { ContactFooter } from "@/components/sections/contact/ContactFooter";
+import { PageReady } from "@/animations/PageReady";
 
 export default function Home() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
         />
       </main>
       <ContactFooter content={site.contact} />
+      <PageReady />
     </>
   );
 }

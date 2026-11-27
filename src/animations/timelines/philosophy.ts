@@ -32,7 +32,10 @@ export function philosophyTimeline({ isDesktop }: { isDesktop: boolean }) {
             anticipatePin: 1,
             invalidateOnRefresh: true,
           }
-        : { trigger: statement, start: "top 75%", end: "bottom 45%", scrub: 0.6 },
+        : // Mobile (no pin): a longer range than the old "top 75%" → "bottom 45%" (~490px on a
+          // phone, which a single flick crossed in a few frames, so the words "just appeared"). Now
+          // the words light up from the moment the statement enters until it reaches the upper third.
+          { trigger: statement, start: "top 88%", end: "bottom 30%", scrub: 0.6 },
     });
     tl.fromTo(split.words, { opacity: 0.14 }, { opacity: 1, ease: "none", stagger: 0.1, duration: 0.5 }, 0);
     if (ems.length) {
