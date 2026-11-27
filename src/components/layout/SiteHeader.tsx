@@ -50,9 +50,13 @@ export function SiteHeader({ nav, cta }: { nav: NavItem[]; cta: LinkItem }) {
         return;
       }
       if (e.key !== "Tab" || !headerRef.current) return;
-      const focusables = Array.from(
-        headerRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
-      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+      // The panel is portalled to <body> (see MobileMenu), so trap across the header and the panel.
+      const sel = "a[href], button:not([disabled])";
+      const panel = document.getElementById("mobile-menu");
+      const focusables = [
+        ...Array.from(headerRef.current.querySelectorAll<HTMLElement>(sel)),
+        ...Array.from(panel?.querySelectorAll<HTMLElement>(sel) ?? []),
+      ].filter((el) => el.offsetParent !== null || el === document.activeElement);
       if (focusables.length === 0) return;
       const first = focusables[0];
       const last = focusables[focusables.length - 1];

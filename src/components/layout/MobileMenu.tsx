@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import type { LinkItem, NavItem } from "@/content/types";
 import { site } from "@/content/site";
@@ -11,7 +12,14 @@ import { EASE } from "@/lib/motion-tokens";
  * Full-screen mobile menu (below lg). §5.8: AnimatePresence; panel clip-path wipe down,
  * masked link stagger; exit reverses at 0.6s. Reduced motion: opacity only (0.2s).
  * Hooks: #mobile-menu[data-menu-panel], [data-menu-link] (masked by [data-menu-mask]).
+ *
+ * Portalled to <body>: the header is moved by GSAP (hide-on-scroll yPercent), and any transform
+ * on an ancestor makes it the containing block of `position: fixed` descendants. Inside the
+ * header the panel was clipped to the 64px header box, so on phones the menu never appeared
+ * once the header had hidden and come back. The header (z-50) still sits above the panel (z-40),
+ * so the Close toggle stays visible and tappable.
  */
+const noopSubscribe = () => () => {};
 export function MobileMenu({
   open,
   onClose,
@@ -27,6 +35,8 @@ export function MobileMenu({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  // Portals cannot render on the server; the menu is closed there anyway.
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   useEffect(() => {
     if (!open) return;
@@ -60,7 +70,9 @@ export function MobileMenu({
         closed: { opacity: 0, y: 16, transition: { duration: 0.2 } },
       };
 
-  return (
+  if (!isClient) return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -69,11 +81,14 @@ export function MobileMenu({
           ref={panelRef}
           data-menu-panel=""
           data-theme="dark"
+          // Lenis is stopped while the menu is open and then cancels every touchmove/wheel,
+          // which made the panel unscrollable on short screens (landscape). Let it scroll natively.
+          data-lenis-prevent=""
           variants={panel}
           initial="closed"
           animate="open"
           exit="closed"
-          className="fixed inset-0 z-40 overflow-y-auto bg-ink text-bone lg:hidden"
+          className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-ink text-bone lg:hidden"
           onClick={(e) => {
             if ((e.target as HTMLElement).closest("a")) onClose();
           }}
@@ -110,6 +125,7 @@ export function MobileMenu({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
